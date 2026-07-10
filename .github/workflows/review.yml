@@ -1,0 +1,25 @@
+name: Claude PR Review
+
+on:
+  pull_request:
+    types: [opened, reopened]   # PR 열 때 자동 리뷰
+  issue_comment:
+    types: [created]            # PR에 "/review" 코멘트로 수동 트리거
+
+jobs:
+  review:
+    # PR 열림 이벤트이거나, PR(=issue.pull_request)에 "/review" 코멘트가 달렸을 때만 실행
+    if: >-
+      github.event_name == 'pull_request' ||
+      (github.event.issue.pull_request != null &&
+       startsWith(github.event.comment.body, '/review'))
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+    uses: thought-corner/ai-review-workflow/.github/workflows/claude-review.yml@v1
+    secrets: inherit
+    # 기본값을 바꾸고 싶을 때만:
+    # with:
+    #   model: claude-opus-4-8
+    #   max_turns: "20"
