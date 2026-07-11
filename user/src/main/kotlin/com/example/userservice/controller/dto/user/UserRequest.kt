@@ -1,16 +1,16 @@
 package com.example.userservice.controller.dto.user
 
 import jakarta.validation.constraints.Email
-import jakarta.validation.constraints.NotNull
+import jakarta.validation.constraints.NotBlank
 
 class UserRequest(
-	@field:NotNull(message = "email cannot be null")
+	@field:NotBlank(message = "email must not be blank")
 	@field:Email
 	var email: String? = null,
 
-	@field:NotNull(message = "name cannot be null")
+	@field:NotBlank(message = "name must not be blank")
 	var name: String? = null,
 
-	@field:NotNull(message = "pwd cannot be null")
+	@field:NotBlank(message = "pwd must not be blank")
 	var pwd: String? = null
 )

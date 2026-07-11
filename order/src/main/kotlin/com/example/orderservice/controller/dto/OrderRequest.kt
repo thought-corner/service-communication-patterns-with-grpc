@@ -1,10 +1,11 @@
 package com.example.orderservice.controller.dto
 
+import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Positive
 
 class OrderRequest(
-	@field:NotNull(message = "productId cannot be null")
+	@field:NotBlank(message = "productId must not be blank")
 	var productId: String? = null,
 
 	@field:NotNull(message = "qty cannot be null")
