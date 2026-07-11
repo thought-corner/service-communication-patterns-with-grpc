@@ -6,21 +6,15 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.authentication.AuthenticationManager
-import org.springframework.security.authorization.AuthorizationDecision
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
-import org.springframework.security.core.Authentication
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
-import org.springframework.security.web.access.expression.WebExpressionAuthorizationManager
-import org.springframework.security.web.access.intercept.RequestAuthorizationContext
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher
-import org.springframework.security.web.util.matcher.IpAddressMatcher
 import org.springframework.http.HttpMethod
-import java.util.function.Supplier
 
 @Configuration
 @EnableWebSecurity
@@ -32,12 +26,6 @@ class WebSecurity(
     private val bCryptPasswordEncoder: BCryptPasswordEncoder,
     private val validator: Validator
 ) {
-
-    companion object {
-        const val ALLOWED_IP_ADDRESS = "127.0.0.1"
-        const val SUBNET = "/32"
-        val ALLOWED_IP_ADDRESS_MATCHER = IpAddressMatcher(ALLOWED_IP_ADDRESS + SUBNET)
-    }
 
     @Bean
     protected fun configure(http: HttpSecurity): SecurityFilterChain {
@@ -51,14 +39,8 @@ class WebSecurity(
         http.authorizeHttpRequests { authz ->
             authz
                 .requestMatchers(PathPatternRequestMatcher.withDefaults().matcher("/actuator/**")).permitAll()
-                .requestMatchers(PathPatternRequestMatcher.withDefaults().matcher("/h2-console/**")).permitAll()
                 .requestMatchers(PathPatternRequestMatcher.withDefaults().matcher(HttpMethod.POST, "/users"))
                 .permitAll()
-                .requestMatchers(PathPatternRequestMatcher.withDefaults().matcher("/welcome")).permitAll()
-                .requestMatchers(PathPatternRequestMatcher.withDefaults().matcher("/health-check")).permitAll()
-                .requestMatchers("/**").access(
-                    WebExpressionAuthorizationManager("hasIpAddress('127.0.0.1') or hasIpAddress('::1')")
-                )
                 .anyRequest().authenticated()
         }
             .authenticationManager(authenticationManager)
@@ -68,16 +50,7 @@ class WebSecurity(
 
         http.addFilterBefore(IpAddressLoggingFilter(), UsernamePasswordAuthenticationFilter::class.java)
 
-        http.headers { headers -> headers.frameOptions { frameOptions -> frameOptions.sameOrigin() } }
-
         return http.build()
-    }
-
-    private fun hasIpAddress(
-        authentication: Supplier<Authentication>,
-        context: RequestAuthorizationContext
-    ): AuthorizationDecision {
-        return AuthorizationDecision(ALLOWED_IP_ADDRESS_MATCHER.matches(context.request))
     }
 
     private fun getAuthenticationFilter(authenticationManager: AuthenticationManager): AuthenticationFilter {
