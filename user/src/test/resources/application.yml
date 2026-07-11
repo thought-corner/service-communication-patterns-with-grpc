@@ -76,7 +76,7 @@ gateway:
 
 token:
   expiration_time: ${TOKEN_EXPIRATION_TIME:86400000}
-  secret: ${TOKEN_SECRET:user_token_test}
+  secret: ${TOKEN_SECRET:user_service_test_jwt_secret_20250328_ok}
 
 order-service:
-  url: http://localhost:${wiremock.server.port}
+  url: http://localhost:8082
