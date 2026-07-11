@@ -23,6 +23,10 @@ class UserServiceImpl(
 
     @Transactional
     override fun createUser(userRequest: UserRequest): UserResult {
+        if (userRepository.existsByEmail(userRequest.email!!)) {
+            throw BusinessException(ErrorCode.EMAIL_ALREADY_EXISTS, "Email already exists: ${userRequest.email}")
+        }
+
         val userCredentials = UserCredentials(
             email = userRequest.email,
             name = userRequest.name

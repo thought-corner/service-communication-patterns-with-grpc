@@ -1,5 +1,6 @@
 package com.example.userservice.exception
 
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.MethodArgumentNotValidException
@@ -20,5 +21,12 @@ class GlobalExceptionHandler {
         val errorCode = ex.errorCode
         return ResponseEntity.status(errorCode.status)
             .body(mapOf("code" to errorCode.name, "message" to ex.message))
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException::class)
+    fun handleDataIntegrityViolation(ex: DataIntegrityViolationException): ResponseEntity<Map<String, String?>> {
+        val errorCode = ErrorCode.EMAIL_ALREADY_EXISTS
+        return ResponseEntity.status(errorCode.status)
+            .body(mapOf("code" to errorCode.name, "message" to errorCode.message))
     }
 }
