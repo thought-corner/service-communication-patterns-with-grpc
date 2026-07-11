@@ -1,6 +1,7 @@
 package com.example.userservice.security
 
 import com.example.userservice.service.UserService
+import tools.jackson.databind.ObjectMapper
 import jakarta.validation.Validator
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -22,7 +23,8 @@ class WebSecurity(
     private val userDetailsService: UserDetailsServiceImpl,
     private val bCryptPasswordEncoder: BCryptPasswordEncoder,
     private val validator: Validator,
-    private val tokenProvider: JwtTokenProvider
+    private val tokenProvider: JwtTokenProvider,
+    private val objectMapper: ObjectMapper
 ) {
 
     @Bean
@@ -50,6 +52,6 @@ class WebSecurity(
     }
 
     private fun getAuthenticationFilter(authenticationManager: AuthenticationManager): AuthenticationFilter {
-        return AuthenticationFilter(authenticationManager, userService, tokenProvider, validator)
+        return AuthenticationFilter(authenticationManager, userService, tokenProvider, validator, objectMapper)
     }
 }

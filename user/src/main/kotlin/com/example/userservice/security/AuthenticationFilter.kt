@@ -2,7 +2,6 @@ package com.example.userservice.security
 
 import com.example.userservice.service.UserService
 import com.example.userservice.vo.LoginCredentials
-import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -14,16 +13,18 @@ import org.springframework.security.core.Authentication
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.userdetails.User
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
+import tools.jackson.databind.ObjectMapper
 
 class AuthenticationFilter(
     authenticationManager: AuthenticationManager,
     private val userService: UserService,
     private val tokenProvider: JwtTokenProvider,
-    private val validator: Validator
+    private val validator: Validator,
+    private val objectMapper: ObjectMapper
 ) : UsernamePasswordAuthenticationFilter(authenticationManager) {
 
     override fun attemptAuthentication(req: HttpServletRequest, res: HttpServletResponse): Authentication {
-        val creds = ObjectMapper().readValue(req.inputStream, LoginCredentials::class.java)
+        val creds = objectMapper.readValue(req.inputStream, LoginCredentials::class.java)
 
         val violations = validator.validate(creds)
         if (violations.isNotEmpty()) {
