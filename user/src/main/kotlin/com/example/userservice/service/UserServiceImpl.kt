@@ -11,6 +11,7 @@ import com.example.userservice.service.dto.UserResult
 import com.example.userservice.vo.UserCredentials
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.modelmapper.ModelMapper
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory
 import org.springframework.http.HttpMethod
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
@@ -28,7 +29,8 @@ class UserServiceImpl(
     private val passwordEncoder: BCryptPasswordEncoder,
     private val restTemplate: RestTemplate,
     private val circuitBreakerFactory: CircuitBreakerFactory<*, *>,
-    private val modelMapper: ModelMapper
+    private val modelMapper: ModelMapper,
+    @Value("\${order-service.url}") private val orderServiceUrl: String
 ) : UserService {
 
     @Transactional
@@ -57,7 +59,7 @@ class UserServiceImpl(
         return circuitBreaker.run(
             {
                 log.info { "Before call orders microservice" }
-                val orderUrl = "http://127.0.0.1:8082/orders/$userId"
+                val orderUrl = "$orderServiceUrl/orders/$userId"
                 val orderListResponse = restTemplate.exchange(
                     orderUrl, HttpMethod.GET, null,
                     OrderResponseList::class.java
