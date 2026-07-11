@@ -2,7 +2,6 @@ package com.example.userservice.security
 
 import com.example.userservice.service.UserService
 import jakarta.validation.Validator
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.authentication.AuthenticationManager
@@ -19,12 +18,11 @@ import org.springframework.http.HttpMethod
 @Configuration
 @EnableWebSecurity
 class WebSecurity(
-    @Value("\${token.secret}") private val tokenSecret: String,
-    @Value("\${token.expiration_time}") private val tokenExpirationTime: Long,
     private val userService: UserService,
     private val userDetailsService: UserDetailsServiceImpl,
     private val bCryptPasswordEncoder: BCryptPasswordEncoder,
-    private val validator: Validator
+    private val validator: Validator,
+    private val tokenProvider: JwtTokenProvider
 ) {
 
     @Bean
@@ -47,13 +45,11 @@ class WebSecurity(
             .sessionManagement { session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
 
         http.addFilter(getAuthenticationFilter(authenticationManager))
-
-        http.addFilterBefore(IpAddressLoggingFilter(), UsernamePasswordAuthenticationFilter::class.java)
-
+        http.addFilterBefore(JwtAuthorizationFilter(tokenProvider), UsernamePasswordAuthenticationFilter::class.java)
         return http.build()
     }
 
     private fun getAuthenticationFilter(authenticationManager: AuthenticationManager): AuthenticationFilter {
-        return AuthenticationFilter(authenticationManager, userService, tokenSecret, tokenExpirationTime, validator)
+        return AuthenticationFilter(authenticationManager, userService, tokenProvider, validator)
     }
 }

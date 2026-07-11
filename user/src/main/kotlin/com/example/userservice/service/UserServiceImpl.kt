@@ -1,6 +1,8 @@
 package com.example.userservice.service
 
 import com.example.userservice.entity.User
+import com.example.userservice.exception.BusinessException
+import com.example.userservice.exception.ErrorCode
 import com.example.userservice.repository.UserRepository
 import com.example.userservice.controller.dto.user.UserRequest
 import com.example.userservice.controller.dto.order.OrderResponse
@@ -11,7 +13,6 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import org.modelmapper.ModelMapper
 import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory
 import org.springframework.http.HttpMethod
-import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -46,7 +47,7 @@ class UserServiceImpl(
 
     override fun getUserByUserId(userId: String): UserResult {
         val userEntity = userRepository.findByUserId(userId)
-            .orElseThrow { UsernameNotFoundException("User not found") }
+            .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND, "User not found: $userId") }
         return UserResult.from(modelMapper.map(userEntity, UserCredentials::class.java))
     }
 
@@ -78,7 +79,7 @@ class UserServiceImpl(
 
     override fun getUserDetailsByEmail(email: String): UserResult {
         val userEntity = userRepository.findByEmail(email)
-            .orElseThrow { UsernameNotFoundException(email) }
+            .orElseThrow { IllegalStateException("Authenticated user not found: $email") }
         return UserResult.from(modelMapper.map(userEntity, UserCredentials::class.java))
     }
 }

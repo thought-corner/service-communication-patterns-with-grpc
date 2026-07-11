@@ -14,4 +14,11 @@ class GlobalExceptionHandler {
         val errors = ex.bindingResult.fieldErrors.associate { it.field to it.defaultMessage }
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors)
     }
+
+    @ExceptionHandler(BusinessException::class)
+    fun handleBusiness(ex: BusinessException): ResponseEntity<Map<String, String?>> {
+        val errorCode = ex.errorCode
+        return ResponseEntity.status(errorCode.status)
+            .body(mapOf("code" to errorCode.name, "message" to ex.message))
+    }
 }
