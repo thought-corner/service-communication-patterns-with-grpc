@@ -20,8 +20,6 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	implementation("org.springframework.boot:spring-boot-starter-actuator")
-	implementation("org.springframework.hateoas:spring-hateoas")
-	implementation("org.springframework.boot:spring-boot-hateoas")
 	implementation("org.springframework.cloud:spring-cloud-starter-bootstrap")
 	implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j")
 	implementation("org.modelmapper:modelmapper:2.3.8")
