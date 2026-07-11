@@ -26,8 +26,8 @@ private val log = KotlinLogging.logger {}
 class UserServiceImpl(
     private val userRepository: UserRepository,
     private val passwordEncoder: BCryptPasswordEncoder,
-    private val restTemplate: RestTemplate?,
-    private val circuitBreakerFactory: CircuitBreakerFactory<*, *>?,
+    private val restTemplate: RestTemplate,
+    private val circuitBreakerFactory: CircuitBreakerFactory<*, *>,
     private val modelMapper: ModelMapper
 ) : UserService {
 
@@ -52,13 +52,13 @@ class UserServiceImpl(
     }
 
     override fun getOrdersByUserId(userId: String): List<OrderResponse> {
-        val circuitBreaker = circuitBreakerFactory!!.create("circuitBreaker1")
+        val circuitBreaker = circuitBreakerFactory.create("circuitBreaker1")
 
         return circuitBreaker.run(
             {
                 log.info { "Before call orders microservice" }
                 val orderUrl = "http://127.0.0.1:8082/orders/$userId"
-                val orderListResponse = restTemplate!!.exchange(
+                val orderListResponse = restTemplate.exchange(
                     orderUrl, HttpMethod.GET, null,
                     OrderResponseList::class.java
                 )
