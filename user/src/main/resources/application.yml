@@ -1,0 +1,36 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: user-service
+  jpa:
+    hibernate:
+      ddl-auto: update
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password:
+
+logging:
+  level:
+    com.example.userservice.client: DEBUG
+  pattern:
+    correlation: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus
+
+gateway:
+  ip: 127.0.0.1
+
+order-service:
+  url: ${ORDER_SERVICE_URL:http://127.0.0.1:8082}
+
+token:
+  expiration_time: ${TOKEN_EXPIRATION_TIME:86400000}
+  secret: ${TOKEN_SECRET:user_token_test_for_jwt_token_20250328}
