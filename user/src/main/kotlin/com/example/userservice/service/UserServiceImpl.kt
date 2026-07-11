@@ -5,32 +5,20 @@ import com.example.userservice.exception.BusinessException
 import com.example.userservice.exception.ErrorCode
 import com.example.userservice.repository.UserRepository
 import com.example.userservice.controller.dto.user.UserRequest
-import com.example.userservice.controller.dto.order.OrderResponse
-import com.example.userservice.controller.dto.order.OrderResponseList
 import com.example.userservice.service.dto.UserResult
 import com.example.userservice.vo.UserCredentials
-import io.github.oshai.kotlinlogging.KotlinLogging
 import org.modelmapper.ModelMapper
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory
-import org.springframework.http.HttpMethod
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.web.client.RestTemplate
 import java.util.UUID
-
-private val log = KotlinLogging.logger {}
 
 @Service
 @Transactional(readOnly = true)
 class UserServiceImpl(
     private val userRepository: UserRepository,
     private val passwordEncoder: BCryptPasswordEncoder,
-    private val restTemplate: RestTemplate,
-    private val circuitBreakerFactory: CircuitBreakerFactory<*, *>,
-    private val modelMapper: ModelMapper,
-    @Value("\${order-service.url}") private val orderServiceUrl: String
+    private val modelMapper: ModelMapper
 ) : UserService {
 
     @Transactional
@@ -51,28 +39,6 @@ class UserServiceImpl(
         val userEntity = userRepository.findByUserId(userId)
             .orElseThrow { BusinessException(ErrorCode.USER_NOT_FOUND, "User not found: $userId") }
         return UserResult.from(modelMapper.map(userEntity, UserCredentials::class.java))
-    }
-
-    override fun getOrdersByUserId(userId: String): List<OrderResponse> {
-        val circuitBreaker = circuitBreakerFactory.create("circuitBreaker1")
-
-        return circuitBreaker.run(
-            {
-                log.info { "Before call orders microservice" }
-                val orderUrl = "$orderServiceUrl/orders/$userId"
-                val orderListResponse = restTemplate.exchange(
-                    orderUrl, HttpMethod.GET, null,
-                    OrderResponseList::class.java
-                )
-                log.info { "After called orders microservice using restful api" }
-
-                orderListResponse.body?.orders ?: emptyList()
-            },
-            { throwable ->
-                log.error(throwable) { "Failed to call orders microservice, returning empty list" }
-                emptyList()
-            }
-        )
     }
 
     override fun getUserByAll(): List<UserResult> {

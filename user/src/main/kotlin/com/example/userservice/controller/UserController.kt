@@ -1,5 +1,6 @@
 package com.example.userservice.controller
 
+import com.example.userservice.client.OrderServiceClient
 import com.example.userservice.controller.hateoas.UserResponseModelHateoas
 import com.example.userservice.controller.dto.user.UserRequest
 import com.example.userservice.service.UserService
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/users")
 class UserController(
     private val userService: UserService,
+    private val orderServiceClient: OrderServiceClient,
     private val userResponseModelHateoas: UserResponseModelHateoas
 ) {
 
@@ -38,8 +40,8 @@ class UserController(
     @GetMapping("/{userId}")
     fun getUser(@PathVariable userId: String): ResponseEntity<EntityModel<UserResponse>> {
         val user = userService.getUserByUserId(userId)
-        val orders = userService.getOrdersByUserId(userId)
-        val entityModel = userResponseModelHateoas.toModel(user, orders)
+        val ordersResult = orderServiceClient.getOrders(userId)
+        val entityModel = userResponseModelHateoas.toModel(user, ordersResult)
         return ResponseEntity.status(HttpStatus.OK).body(entityModel)
     }
 }
