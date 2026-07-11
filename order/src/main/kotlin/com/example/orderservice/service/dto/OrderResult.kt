@@ -1,7 +1,7 @@
 package com.example.orderservice.service.dto
 
 import com.example.orderservice.vo.OrderItem
-import java.util.Date
+import java.time.LocalDateTime
 
 class OrderResult(
 	var productId: String? = null,
@@ -10,8 +10,8 @@ class OrderResult(
 	var totalPrice: Int? = null,
 	var orderId: String? = null,
 	var userId: String? = null,
-	var createdAt: Date? = null,
-	var updatedAt: Date? = null
+	var createdAt: LocalDateTime? = null,
+	var updatedAt: LocalDateTime? = null
 ) {
 	companion object {
 		fun from(orderItem: OrderItem): OrderResult = OrderResult(

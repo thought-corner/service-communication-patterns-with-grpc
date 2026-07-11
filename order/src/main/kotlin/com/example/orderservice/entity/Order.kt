@@ -12,7 +12,7 @@ import jakarta.persistence.Table
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedDate
 import org.springframework.data.jpa.domain.support.AuditingEntityListener
-import java.util.Date
+import java.time.LocalDateTime
 
 @Entity
 @Table(name = "orders")
@@ -42,11 +42,11 @@ class Order(
 
 	@CreatedDate
 	@Column(nullable = false, updatable = false)
-	var createdAt: Date? = null,
+	var createdAt: LocalDateTime? = null,
 
 	@LastModifiedDate
 	@Column(nullable = false)
-	var updatedAt: Date? = null
+	var updatedAt: LocalDateTime? = null
 ) {
 
 	@PrePersist

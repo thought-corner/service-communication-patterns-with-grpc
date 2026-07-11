@@ -2,7 +2,7 @@ package com.example.orderservice.controller.dto
 
 import com.example.orderservice.service.dto.OrderResult
 import com.fasterxml.jackson.annotation.JsonInclude
-import java.util.Date
+import java.time.LocalDateTime
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 class OrderResponse(
@@ -10,8 +10,8 @@ class OrderResponse(
     var qty: Int? = null,
     var unitPrice: Int? = null,
     var totalPrice: Int? = null,
-    var createdAt: Date? = null,
-    var updatedAt: Date? = null,
+    var createdAt: LocalDateTime? = null,
+    var updatedAt: LocalDateTime? = null,
     var orderId: String? = null
 ) {
     companion object {

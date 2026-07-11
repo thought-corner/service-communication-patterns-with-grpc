@@ -1,6 +1,6 @@
 package com.example.orderservice.vo
 
-import java.util.Date
+import java.time.LocalDateTime
 
 class OrderItem(
 	var productId: String? = null,
@@ -9,6 +9,6 @@ class OrderItem(
 	var totalPrice: Int? = null,
 	var orderId: String? = null,
 	var userId: String? = null,
-	var createdAt: Date? = null,
-	var updatedAt: Date? = null
+	var createdAt: LocalDateTime? = null,
+	var updatedAt: LocalDateTime? = null
 )
