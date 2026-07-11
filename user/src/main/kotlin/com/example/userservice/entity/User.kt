@@ -23,6 +23,6 @@ class User(
 	@Column(nullable = false, unique = true)
 	var userId: String? = null,
 
-	@Column(nullable = false, unique = true)
+	@Column(nullable = false)
 	var password: String? = null
 )
