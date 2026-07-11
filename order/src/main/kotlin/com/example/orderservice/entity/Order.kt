@@ -32,7 +32,7 @@ class Order(
 	var unitPrice: Int? = null,
 
 	@Column(nullable = false)
-	var totalPrice: Int? = null,
+	var totalPrice: Long? = null,
 
 	@Column(nullable = false)
 	var userId: String? = null,
@@ -52,7 +52,7 @@ class Order(
 	@PrePersist
 	@PreUpdate
 	protected fun calculateTotalPrice() {
-		totalPrice = (qty ?: 0) * (unitPrice ?: 0)
+		totalPrice = (qty ?: 0).toLong() * (unitPrice ?: 0)
 	}
 
 	companion object {
@@ -63,7 +63,7 @@ class Order(
 				productId = productId,
 				qty = qty,
 				unitPrice = unitPrice,
-				totalPrice = qty * unitPrice,
+				totalPrice = qty.toLong() * unitPrice,
 				userId = userId,
 				orderId = orderId
 			)
