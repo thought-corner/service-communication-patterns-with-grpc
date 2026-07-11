@@ -19,16 +19,13 @@ class OrderServiceImpl(
 
     @Transactional
     override fun createOrder(orderRequest: OrderRequest, userId: String): OrderResult {
-        val orderItem = OrderItem(
-            productId = orderRequest.productId,
-            qty = orderRequest.qty,
-            unitPrice = orderRequest.unitPrice,
-            userId = userId
+        val order = Order.place(
+            productId = orderRequest.productId!!,
+            qty = orderRequest.qty!!,
+            unitPrice = orderRequest.unitPrice!!,
+            userId = userId,
+            orderId = UUID.randomUUID().toString()
         )
-        orderItem.orderId = UUID.randomUUID().toString()
-        orderItem.totalPrice = orderItem.calculateTotalPrice()
-
-        val order = modelMapper.map(orderItem, Order::class.java)
         val savedOrder = orderRepository.save(order)
         return OrderResult.from(modelMapper.map(savedOrder, OrderItem::class.java))
     }

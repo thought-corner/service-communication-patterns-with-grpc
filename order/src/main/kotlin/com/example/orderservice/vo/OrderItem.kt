@@ -11,6 +11,4 @@ class OrderItem(
 	var userId: String? = null,
 	var createdAt: Date? = null,
 	var updatedAt: Date? = null
-) {
-	fun calculateTotalPrice(): Int = (qty ?: 0) * (unitPrice ?: 0)
-}
+)

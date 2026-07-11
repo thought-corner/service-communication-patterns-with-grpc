@@ -6,6 +6,8 @@ import jakarta.persistence.EntityListeners
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
+import jakarta.persistence.PrePersist
+import jakarta.persistence.PreUpdate
 import jakarta.persistence.Table
 import org.springframework.data.annotation.CreatedDate
 import org.springframework.data.annotation.LastModifiedDate
@@ -45,4 +47,26 @@ class Order(
 	@LastModifiedDate
 	@Column(nullable = false)
 	var updatedAt: Date? = null
-)
+) {
+
+	@PrePersist
+	@PreUpdate
+	protected fun calculateTotalPrice() {
+		totalPrice = (qty ?: 0) * (unitPrice ?: 0)
+	}
+
+	companion object {
+		fun place(productId: String, qty: Int, unitPrice: Int, userId: String, orderId: String): Order {
+			require(qty > 0) { "qty must be greater than zero" }
+			require(unitPrice > 0) { "unitPrice must be greater than zero" }
+			return Order(
+				productId = productId,
+				qty = qty,
+				unitPrice = unitPrice,
+				totalPrice = qty * unitPrice,
+				userId = userId,
+				orderId = orderId
+			)
+		}
+	}
+}
