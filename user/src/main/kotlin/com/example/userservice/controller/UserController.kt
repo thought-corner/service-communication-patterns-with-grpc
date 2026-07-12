@@ -1,6 +1,7 @@
 package com.example.userservice.controller
 
 import com.example.userservice.client.OrderServiceClient
+import com.example.userservice.controller.dto.order.OrderResponseList
 import com.example.userservice.controller.dto.user.UserRequest
 import com.example.userservice.service.UserService
 import com.example.userservice.controller.dto.user.UserResponse
@@ -37,7 +38,17 @@ class UserController(
     @GetMapping("/me")
     fun getMyProfile(@AuthenticationPrincipal userId: String): ResponseEntity<UserResponse> {
         val user = userService.getUserByUserId(userId)
-        val ordersResult = orderServiceClient.getOrders(userId)
+        val ordersResult = orderServiceClient.getOrdersOrDegrade(userId)
         return ResponseEntity.status(HttpStatus.OK).body(UserResponse.of(user, ordersResult))
+    }
+
+    /**
+     * 필수(essential) 주문 조회. 종착 실패 시 OrderServiceClient가 OrdersUnavailableException을
+     * 던지고, GlobalExceptionHandler가 503 + Retry-After로 매핑한다(부가 조회와 달리 degrade하지 않음).
+     */
+    @GetMapping("/me/orders")
+    fun getMyOrders(@AuthenticationPrincipal userId: String): ResponseEntity<OrderResponseList> {
+        val ordersResult = orderServiceClient.getOrdersOrThrow(userId)
+        return ResponseEntity.status(HttpStatus.OK).body(OrderResponseList(ordersResult.orders ?: emptyList()))
     }
 }

@@ -1,53 +1,68 @@
 package com.example.userservice.client
 
-import com.example.userservice.controller.dto.order.OrderResponseList
+import com.example.order.v1.GetOrdersRequest
+import com.example.order.v1.OrderQueryServiceGrpc.OrderQueryServiceBlockingStub
+import com.example.userservice.config.decorateWithResilience
+import com.example.userservice.controller.dto.order.OrderResponse
+import com.example.userservice.exception.OrdersUnavailableException
 import com.example.userservice.service.dto.OrdersResult
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory
-import org.springframework.http.HttpMethod
+import io.github.resilience4j.circuitbreaker.CircuitBreaker
+import io.github.resilience4j.retry.Retry
+import io.grpc.StatusRuntimeException
 import org.springframework.stereotype.Component
-import org.springframework.web.client.RestClientException
-import org.springframework.web.client.RestTemplate
-import java.util.concurrent.TimeoutException
+import java.util.concurrent.TimeUnit
 
 private val log = KotlinLogging.logger {}
 
+private const val DEADLINE_SECONDS = 4L
+
+/**
+ * order-service 주문 조회의 gRPC 클라이언트.
+ *
+ * 재시도/서킷은 [decorateWithResilience]가 공유(Retry(외)→CircuitBreaker(내)) 처리한다.
+ * 종착 실패(재시도 소진/서킷 OPEN) 시 엔드포인트 성격에 따라 분기가 다르다:
+ * - [getOrdersOrDegrade] (부가): 조용히 [OrdersResult.unavailable]로 degrade
+ * - [getOrdersOrThrow]  (필수): [OrdersUnavailableException]으로 하드 실패
+ */
 @Component
 class OrderServiceClient(
-    private val restTemplate: RestTemplate,
-    private val circuitBreakerFactory: CircuitBreakerFactory<*, *>,
-    @Value("\${order-service.url}") private val orderServiceUrl: String
+    private val orderQueryStub: OrderQueryServiceBlockingStub,
+    private val orderRetry: Retry,
+    private val orderCircuitBreaker: CircuitBreaker
 ) {
 
-    fun getOrders(userId: String): OrdersResult {
-        val circuitBreaker = circuitBreakerFactory.create("orderService")
-        return circuitBreaker.run(
-            { fetchOrders(userId) },
-            { throwable -> handleFailure(userId, throwable) }
-        )
-    }
-
-    private fun fetchOrders(userId: String): OrdersResult {
-        val orderUrl = "$orderServiceUrl/orders/$userId"
-        val response = restTemplate.exchange(orderUrl, HttpMethod.GET, null, OrderResponseList::class.java)
-        return OrdersResult.ok(response.body?.orders ?: emptyList())
-    }
-
-    private fun handleFailure(userId: String, throwable: Throwable?): OrdersResult {
-        when (throwable) {
-            is CallNotPermittedException ->
-                log.warn { "Circuit OPEN for order-service, marking orders UNAVAILABLE for user=$userId" }
-
-            is TimeoutException, is RestClientException ->
-                log.error(throwable) { "order-service call failed for user=$userId, marking orders UNAVAILABLE" }
-
-            else -> {
-                log.error(throwable) { "Unexpected error while fetching orders for user=$userId" }
-                throw throwable ?: IllegalStateException("Order fetch failed without a cause for user=$userId")
-            }
+    /** 부가 데이터용: 종착 실패 시 UNAVAILABLE로 정직하게 degrade한다. */
+    fun getOrdersOrDegrade(userId: String): OrdersResult =
+        try {
+            OrdersResult.ok(fetchOrders(userId))
+        } catch (e: CallNotPermittedException) {
+            log.warn { "Circuit OPEN for order-service, degrading orders to UNAVAILABLE for user=$userId" }
+            OrdersResult.unavailable()
+        } catch (e: StatusRuntimeException) {
+            log.error(e) { "order-service gRPC call failed for user=$userId, degrading to UNAVAILABLE" }
+            OrdersResult.unavailable()
         }
-        return OrdersResult.unavailable()
-    }
+
+    /** 필수 데이터용: 종착 실패 시 하드 실패(예외)로 올려 503으로 매핑되게 한다. */
+    fun getOrdersOrThrow(userId: String): OrdersResult =
+        try {
+            OrdersResult.ok(fetchOrders(userId))
+        } catch (e: CallNotPermittedException) {
+            log.warn { "Circuit OPEN for order-service, failing hard for essential orders user=$userId" }
+            throw OrdersUnavailableException(cause = e)
+        } catch (e: StatusRuntimeException) {
+            log.error(e) { "order-service gRPC call failed for user=$userId, failing hard" }
+            throw OrdersUnavailableException(cause = e)
+        }
+
+    private fun fetchOrders(userId: String): List<OrderResponse> =
+        decorateWithResilience(orderRetry, orderCircuitBreaker) {
+            val request = GetOrdersRequest.newBuilder().setUserId(userId).build()
+            val response = orderQueryStub
+                .withDeadlineAfter(DEADLINE_SECONDS, TimeUnit.SECONDS)
+                .getOrders(request)
+            response.ordersList.map { OrderProtoMapper.toResponse(it) }
+        }
 }

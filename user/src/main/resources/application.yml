@@ -16,8 +16,6 @@ spring:
 logging:
   level:
     com.example.userservice.client: DEBUG
-  pattern:
-    correlation: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'
 
 management:
   endpoints:
@@ -25,11 +23,10 @@ management:
       exposure:
         include: health, info, prometheus
 
-gateway:
-  ip: 127.0.0.1
-
 order-service:
-  url: ${ORDER_SERVICE_URL:http://127.0.0.1:8082}
+  grpc:
+    host: ${ORDER_SERVICE_GRPC_HOST:127.0.0.1}
+    port: ${ORDER_SERVICE_GRPC_PORT:9090}
 
 token:
   expiration_time: ${TOKEN_EXPIRATION_TIME:86400000}
