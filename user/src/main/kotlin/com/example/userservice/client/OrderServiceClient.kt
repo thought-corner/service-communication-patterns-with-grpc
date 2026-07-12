@@ -21,7 +21,7 @@ private const val DEADLINE_SECONDS = 4L
 /**
  * order-service 주문 조회의 gRPC 클라이언트.
  *
- * 재시도/서킷은 [decorateWithResilience]가 공유(Retry(외)→CircuitBreaker(내)) 처리한다.
+ * 재시도/서킷은 [decorateWithResilience]가 공유(CircuitBreaker(외)→Retry(내)) 처리한다.
  * 종착 실패(재시도 소진/서킷 OPEN) 시 엔드포인트 성격에 따라 분기가 다르다:
  * - [getOrdersOrDegrade] (부가): 조용히 [OrdersResult.unavailable]로 degrade
  * - [getOrdersOrThrow]  (필수): [OrdersUnavailableException]으로 하드 실패

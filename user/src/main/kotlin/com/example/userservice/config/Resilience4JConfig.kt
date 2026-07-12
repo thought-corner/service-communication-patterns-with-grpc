@@ -20,6 +20,11 @@ import java.time.Duration
  * - 서킷이 OPEN이면 바깥 CircuitBreaker가 CallNotPermittedException을 즉시 던져 재시도조차 시작하지 않는다(fail-fast). 다운스트림이 죽었을 때 재시도로 부하를 증폭시키지 않는다.
  * - 재시도가 안쪽에 있으므로 1 논리 호출이 CB window에 결과 1건만 적재된다. 재시도가 일시적 blip을 흡수해 성공하면 CB는 성공 1건으로 본다(attempt마다 실패를 중복 적재하지 않음).
  *
+ * 트레이드오프(의도됨): CB가 바깥이라 실측 소요는 재시도 백오프 + 각 attempt 대기까지 포함한 전체 walltime이다.
+ * 재시도 끝에 성공한 호출이라도 총 소요가 slowCallDurationThreshold(2s)를 넘으면 slow-call로 집계돼 slow-rate로 서킷이 열릴 수 있다.
+ * 이는 "재시도까지 동원해도 2초 넘게 걸리는 상태 = 느린 다운스트림"으로 보고 격리하려는 의도다.
+ * 실무상 UNAVAILABLE은 대개 빨리 반환돼 재시도 총소요도 짧으므로 영향은 작다.
+ *
  * 재시도/서킷 집계 대상은 "일시적" gRPC status(UNAVAILABLE, RESOURCE_EXHAUSTED)뿐이다.
  * NOT_FOUND/INVALID_ARGUMENT 같은 호출자 책임 오류는 재시도하지도, 서킷 실패로 세지도 않는다.
  */
