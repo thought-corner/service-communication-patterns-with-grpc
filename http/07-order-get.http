@@ -1,0 +1,6 @@
+# 사용자별 주문 조회 — GET /orders/{userId} (order-service, 포트 8082)
+# user-service 를 거치지 않고 order-service 를 직접 호출해 저장된 주문을 확인한다.
+# userId 는 02-auth-login 에서 캡처한 {{userId}} 를 사용한다.
+
+### 정상: 사용자 주문 목록 → 200 OK
+GET {{orderHost}}/orders/{{userId}}

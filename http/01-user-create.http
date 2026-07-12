@@ -1,0 +1,43 @@
+# 회원 생성 — POST /users (permitAll, 인증 불필요)
+# 환경 변수는 http-client.env.json 의 dev 프로필 사용 (IntelliJ: 우측 상단 env 선택).
+# 요청 바디는 UserRequest{email, name, pwd} — 비밀번호 필드명이 pwd 임에 주의.
+
+### 정상: 회원 생성 → 201 Created
+POST {{userHost}}/users
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "name": "Alice",
+  "pwd": "{{password}}"
+}
+
+### 이메일 중복 → 409 Conflict (위 요청을 한 번 더 보내면 재현)
+POST {{userHost}}/users
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "name": "Alice",
+  "pwd": "{{password}}"
+}
+
+### 검증 실패: 필수 필드 공백 → 400 Bad Request (field별 메시지)
+POST {{userHost}}/users
+Content-Type: application/json
+
+{
+  "email": "",
+  "name": "",
+  "pwd": ""
+}
+
+### 검증 실패: 이메일 형식 오류 → 400 Bad Request
+POST {{userHost}}/users
+Content-Type: application/json
+
+{
+  "email": "not-an-email",
+  "name": "Bob",
+  "pwd": "password123"
+}

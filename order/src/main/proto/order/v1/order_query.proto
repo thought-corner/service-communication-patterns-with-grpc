@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package order.v1;
+
+option java_multiple_files = true;
+option java_package = "com.example.order.v1";
+option java_outer_classname = "OrderQueryProto";
+
+service OrderQueryService {
+  rpc GetOrders(GetOrdersRequest) returns (GetOrdersResponse);
+}
+
+message GetOrdersRequest {
+  string user_id = 1;
+}
+
+message GetOrdersResponse {
+  repeated Order orders = 1;
+}
+
+message Order {
+  string order_id = 1;
+  string product_id = 2;
+  int32 qty = 3;
+  int32 unit_price = 4;
+  int64 total_price = 5;
+  string user_id = 6;
+  string created_at = 7;
+  string updated_at = 8;
+}

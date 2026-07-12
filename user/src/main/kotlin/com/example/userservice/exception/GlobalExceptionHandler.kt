@@ -1,6 +1,7 @@
 package com.example.userservice.exception
 
 import org.springframework.dao.DataIntegrityViolationException
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.MethodArgumentNotValidException
@@ -29,4 +30,10 @@ class GlobalExceptionHandler {
         return ResponseEntity.status(errorCode.status)
             .body(mapOf("code" to errorCode.name, "message" to errorCode.message))
     }
+
+    @ExceptionHandler(OrdersUnavailableException::class)
+    fun handleOrdersUnavailable(ex: OrdersUnavailableException): ResponseEntity<Map<String, String?>> =
+        ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+            .header(HttpHeaders.RETRY_AFTER, ex.retryAfterSeconds.toString())
+            .body(mapOf("code" to "ORDERS_UNAVAILABLE", "message" to ex.message))
 }
