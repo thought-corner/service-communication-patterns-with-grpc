@@ -1,0 +1,14 @@
+# 내 프로필 조회 — GET /users/me (부가 주문 포함, degrade 대상)
+# 인증 필요: token 헤더에 JWT 원문(Bearer 접두어 없음)을 넣는다.
+# {{authToken}} 은 02-auth-login 성공 요청에서 캡처된 값.
+#
+# order-service 가 정상이면 프로필 + 주문 목록(ordersStatus=OK)을 반환하고,
+# gRPC 재시도 소진/서킷 OPEN 이면 200 OK 를 유지한 채 ordersStatus=UNAVAILABLE 로 degrade 한다.
+# (order-service 를 내려서 후자를 재현할 수 있다.)
+
+### 정상/degrade: 내 프로필 조회 → 200 OK
+GET {{userHost}}/users/me
+token: {{authToken}}
+
+### 인증 실패: token 헤더 누락 → 403 Forbidden
+GET {{userHost}}/users/me

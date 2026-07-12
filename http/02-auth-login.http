@@ -1,0 +1,39 @@
+# 로그인 — POST /login (Spring Security 기본 필터, 인증 진입점)
+# 성공 시 응답 헤더로 token(JWT, Bearer 접두어 없음)과 userId 를 돌려준다.
+# 아래 성공 요청의 응답 핸들러가 token/userId 를 전역 변수에 저장하므로
+# 이후 04·05 파일의 인증 요청에서 {{authToken}} 으로 재사용할 수 있다.
+
+### 정상: 로그인 → 200 OK (token/userId 헤더 캡처)
+POST {{userHost}}/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "{{password}}"
+}
+
+> {%
+    client.global.set("authToken", response.headers.valueOf("token"));
+    client.global.set("userId", response.headers.valueOf("userId"));
+    client.test("token 헤더 존재", function() {
+        client.assert(response.headers.valueOf("token") != null, "token 헤더 없음");
+    });
+%}
+
+### 인증 실패: 비밀번호 오류 → 401 Unauthorized
+POST {{userHost}}/login
+Content-Type: application/json
+
+{
+  "email": "{{email}}",
+  "password": "wrong-password"
+}
+
+### 인증 실패: 미가입 이메일 → 401 Unauthorized
+POST {{userHost}}/login
+Content-Type: application/json
+
+{
+  "email": "nobody@example.com",
+  "password": "{{password}}"
+}

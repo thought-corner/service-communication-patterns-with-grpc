@@ -1,0 +1,19 @@
+# 내 주문 조회(필수) — GET /users/me/orders (하드 실패 대상)
+# 인증 필요: token 헤더에 JWT 원문을 넣는다({{authToken}} = 02-auth-login 캡처값).
+#
+# 부가 조회(04)와 달리 degrade 하지 않는다. gRPC 재시도 소진/서킷 OPEN 이면
+# OrderServiceClient 가 OrdersUnavailableException 을 던지고, GlobalExceptionHandler 가
+# 503 Service Unavailable + Retry-After 헤더로 매핑한다.
+# (order-service 를 내려서 503 분기를 재현할 수 있다.)
+
+### 정상: 내 주문 조회 → 200 OK
+GET {{userHost}}/users/me/orders
+token: {{authToken}}
+
+### 하드 실패: order-service 다운 시 → 503 Service Unavailable + Retry-After
+# (order-service 를 중지한 뒤 위 요청과 동일하게 호출)
+GET {{userHost}}/users/me/orders
+token: {{authToken}}
+
+### 인증 실패: token 헤더 누락 → 403 Forbidden
+GET {{userHost}}/users/me/orders
