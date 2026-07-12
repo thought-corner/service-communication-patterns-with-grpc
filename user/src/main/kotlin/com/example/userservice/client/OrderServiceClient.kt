@@ -43,6 +43,11 @@ class OrderServiceClient(
         } catch (e: StatusRuntimeException) {
             log.error(e) { "order-service gRPC call failed for user=$userId, degrading to UNAVAILABLE" }
             OrdersResult.unavailable()
+        } catch (e: Exception) {
+            // 부가 조회는 어떤 이유로도 500을 내지 않는다. 프로토 매핑/파싱(LocalDateTime.parse) 등
+            // gRPC status가 아닌 실패까지 여기서 흡수해 degrade로 종착시킨다.
+            log.error(e) { "Unexpected error resolving orders for user=$userId, degrading to UNAVAILABLE" }
+            OrdersResult.unavailable()
         }
 
     /** 필수 데이터용: 종착 실패 시 하드 실패(예외)로 올려 503으로 매핑되게 한다. */
