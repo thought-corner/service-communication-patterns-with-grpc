@@ -22,8 +22,6 @@ spring:
 logging:
   level:
     com.example.orderservice: DEBUG
-  pattern:
-    correlation: '%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]'
 
 management:
   endpoints:
