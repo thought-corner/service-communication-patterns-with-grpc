@@ -60,6 +60,13 @@ class OrderServiceClient(
         } catch (e: StatusRuntimeException) {
             log.error(e) { "order-service gRPC call failed for user=$userId, failing hard" }
             throw OrdersUnavailableException(cause = e)
+        } catch (e: Exception) {
+            // 부가 경로(getOrdersOrDegrade)와 대칭: 프로토 매핑/파싱(LocalDateTime.parse) 등
+            // gRPC status가 아닌 실패도 "주문을 못 준 것"으로 보고 503(하드 실패)으로 종착시켜
+            // 500 누수를 막는다. 동일 fetchOrders를 쓰는 두 경로가 같은 downstream 이상에 대해
+            // 일관된 신호(부가=UNAVAILABLE, 필수=503+Retry-After)를 내도록 한다.
+            log.error(e) { "Unexpected error resolving essential orders for user=$userId, failing hard" }
+            throw OrdersUnavailableException(cause = e)
         }
 
     private fun fetchOrders(userId: String): List<OrderResponse> =
